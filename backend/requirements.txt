@@ -1,0 +1,19 @@
+# Core
+fastapi[standard]
+python-dotenv
+pydantic-settings
+
+# AI Providers
+langchain
+langchain-openai
+langchain-google-genai
+google-generativeai
+langchain-anthropic
+anthropic
+langchain-xai
+langchain-deepseek
+requests
+
+# Database
+sqlalchemy
+asyncpg
