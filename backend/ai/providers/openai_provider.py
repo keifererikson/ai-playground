@@ -4,6 +4,7 @@ from langchain_core.utils import convert_to_secret_str
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 from .base import LLMProvider
 import openai
+import re
 
 
 class OpenAIProvider(LLMProvider):
@@ -70,7 +71,28 @@ class OpenAIProvider(LLMProvider):
         try:
             client = openai.AsyncOpenAI(api_key=self.api_key)
             models = await client.models.list()
-            return sorted([m.id for m in models.data if "gpt-" in m.id])
+
+            excluded_substrings = [
+                "ft:",
+                "instruct",
+                "preview",
+                "vision",
+                "image",
+                "audio",
+                "embed",
+                "json",
+            ]
+            date_pattern = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+            filtered_models = [
+                m.id
+                for m in models.data
+                if ("gpt-" in m.id or "o3" in m.id or "o4" in m.id)
+                and not any(sub in m.id for sub in excluded_substrings)
+                and not date_pattern.search(m.id)
+            ]
+
+            return sorted(filtered_models)
         except Exception as e:
             print(f"Error listing OpenAI models: {e}")
             return ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]  # Fallback models
