@@ -11,13 +11,13 @@ class OpenAIProvider(LLMProvider):
     """Concrete LLM provider for OpenAI models using langchain-openai."""
 
     def __init__(
-        self, api_key: str, model: str = "gpt-4o-mini", temperature: float = 0.7
+        self, api_key: str, model: str = "gpt-5-nano", temperature: float = 0.7
     ):
         """Initializes the OpenAIProvider instance.
 
         Args:
             api_key: The OpenAI API key.
-            model: The model name to use, e.g., "gpt-4o-mini".
+            model: The model name to use, e.g., "gpt-5-nano".
             temperature: The sampling temperature for the model.
         """
         super().__init__(api_key)
@@ -95,7 +95,7 @@ class OpenAIProvider(LLMProvider):
             return sorted(filtered_models)
         except Exception as e:
             print(f"Error listing OpenAI models: {e}")
-            return ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]  # Fallback models
+            return ["gpt-5-nano", "gpt-4o-mini", "gpt-3.5-turbo"]  # Fallback models
 
     async def set_model(self, model: str):
         """Sets the model to be used for text generation.

@@ -3,7 +3,14 @@ from pydantic import BaseModel, Field
 
 
 class TestPromptRequest(BaseModel):
-    promp: str = Field(..., min_length=1, max_length=1000)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        examples=[
+            "An old robot tends to a rooftop garden. It finds a single, withered flower. Describe its thoughts."
+        ],
+    )
 
 
 class TestPromptResponse(BaseModel):

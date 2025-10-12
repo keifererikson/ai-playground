@@ -52,3 +52,20 @@ async def update_settings(
         await provider.set_temperature(payload.temperature)
 
     return await get_settings(llm_manager)
+
+
+@router.post(
+    "/test",
+    response_model=TestPromptResponse,
+    summary="Test LLM with a prompt",
+)
+async def test_prompt(
+    llm_manager=Depends(LLMManager), payload: TestPromptRequest = Body(...)
+):
+    """Sends a test prompt to the current LLM provider and returns the response."""
+    provider = llm_manager.get_current_provider()
+    try:
+        response_text = await provider.generate_text(payload.prompt)
+        return TestPromptResponse(response=response_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating text: {e}")
