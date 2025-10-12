@@ -17,11 +17,30 @@ class TestPromptResponse(BaseModel):
     response: str
 
 
+class EmbeddingRequest(BaseModel):
+    """Request model for generating text embeddings."""
+
+    text: str = Field(
+        ...,
+        min_length=1,
+        description="The input text to be converted into an embedding.",
+        examples=["The quick brown fox jumps over the lazy dog."],
+    )
+
+
+class EmbeddingResponse(BaseModel):
+    """Response model for text embeddings."""
+
+    model: str
+    embedding: List[float]
+
+
 class SettingsResponse(BaseModel):
     """Response model for current settings."""
 
     provider: str
     model: str
+    embedding_model: Optional[str] = None
     temperature: float
     available_models: List[str]
 

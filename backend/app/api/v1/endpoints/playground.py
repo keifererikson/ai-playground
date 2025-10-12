@@ -3,6 +3,8 @@ from ai.llm_manager import LLMManager
 from app.api.v1.schemas import (
     TestPromptRequest,
     TestPromptResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
     SettingsResponse,
     UpdateSettingsRequest,
 )
@@ -23,6 +25,7 @@ async def get_settings(llm_manager=Depends(LLMManager)):
     return SettingsResponse(
         provider=llm_manager.current_provider,
         model=provider.model,
+        embedding_model=provider.embedding_model,
         temperature=provider.temperature,
         available_models=available_models,
     )
@@ -69,3 +72,30 @@ async def test_prompt(
         return TestPromptResponse(response=response_text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating text: {e}")
+
+
+@router.post(
+    "/embed", response_model=EmbeddingResponse, summary="Generate text embedding"
+)
+async def create_embedding(
+    llm_manager=Depends(LLMManager), payload: EmbeddingRequest = Body(...)
+):
+    """
+    Generates a text embedding for the given input text.
+    Returns the truncated embedding vector and the model used.
+
+    """
+    provider = llm_manager.get_current_provider()
+    try:
+        provider = llm_manager.get_current_provider()
+        embedding = await provider.generate_embedding(payload.text)
+        embedding_model = await provider.get_embedding_model()
+
+        return EmbeddingResponse(embedding=embedding[:10], model=embedding_model)
+    except NotImplementedError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Provider '{llm_manager.current_provider}' does not support embeddings.",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating embedding: {e}")

@@ -21,6 +21,24 @@ class LLMProvider(ABC):
         """
         pass
 
+    async def generate_embedding(self, text: str) -> List[float]:
+        """
+        Generate an embedding for the given text.
+        This method is optional and may not be implemented by all providers.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support embeddings."
+        )
+
+    async def get_embedding_model(self) -> str:
+        """
+        Get the embedding model name.
+        This method is optional and may not be implemented by all providers.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support embeddings."
+        )
+
     @abstractmethod
     async def list_models(self) -> List[str]:
         """

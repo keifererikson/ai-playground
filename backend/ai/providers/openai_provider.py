@@ -23,6 +23,7 @@ class OpenAIProvider(LLMProvider):
         super().__init__(api_key)
         self.model = model
         self.temperature = temperature
+        self.embedding_model = "text-embedding-3-small"
         self._update_llm_instance()
 
     def _update_llm_instance(self):
@@ -61,6 +62,36 @@ class OpenAIProvider(LLMProvider):
         except Exception as e:
             print(f"Error generating OpenAI text: {e}")
             raise
+
+    async def generate_embedding(self, text: str) -> list[float]:
+        """Generates a text embedding for the given input text using OpenAI.
+
+        Args:
+            text: The input text to be converted into an embedding.
+        Returns:
+            A list of floats representing the text embedding.
+        Raises:
+            Exception: If the embedding generation fails.
+        """
+        try:
+            client = openai.AsyncOpenAI(api_key=self.api_key)
+            text_to_embed = text.replace("\n", " ")
+
+            response = await client.embeddings.create(
+                input=[text_to_embed], model=self.embedding_model
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            print(f"Error generating OpenAI embedding: {e}")
+            raise
+
+    async def get_embedding_model(self) -> str:
+        """Returns the name of the embedding model used.
+
+        Returns:
+            The embedding model name as a string.
+        """
+        return self.embedding_model
 
     async def list_models(self) -> list[str]:
         """Lists available models from OpenAI.
