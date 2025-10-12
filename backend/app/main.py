@@ -1,21 +1,25 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from app.api.v1.endpoints import playground
 from ai.llm_manager import LLMManager
 
 load_dotenv()
 
-app = FastAPI()
-
 llm_manager = LLMManager()
+
+app = FastAPI(
+    title="AI Playground",
+    description="An interactive platform to experiment with various AI models and providers.",
+    version="0.0.1",
+)
+
+app.include_router(
+    playground.router,
+    prefix="/api/v1",
+    tags=["Playground"],
+)
 
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
-
-@app.get("/test")
-async def test_llm():
-    provider = llm_manager.get_current_provider()
-    response = await provider.generate_text("Hello, how are you?")
-    return {"response": response}
