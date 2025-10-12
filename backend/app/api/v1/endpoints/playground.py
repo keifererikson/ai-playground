@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, HTTPException
 from ai.llm_manager import LLMManager
 from app.api.v1.schemas import (
     TestPromptRequest,
@@ -26,3 +26,29 @@ async def get_settings(llm_manager=Depends(LLMManager)):
         temperature=provider.temperature,
         available_models=available_models,
     )
+
+
+@router.put(
+    "/settings",
+    response_model=SettingsResponse,
+    summary="Update LLM settings",
+)
+async def update_settings(
+    llm_manager=Depends(LLMManager), payload: UpdateSettingsRequest = Body(...)
+):
+    """Updates the LLM settings including provider, model, and temperature."""
+    if payload.provider is not None:
+        try:
+            llm_manager.set_provider(payload.provider)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    provider = llm_manager.get_current_provider()
+
+    if payload.model is not None:
+        await provider.set_model(payload.model)
+
+    if payload.temperature is not None:
+        await provider.set_temperature(payload.temperature)
+
+    return await get_settings(llm_manager)

@@ -46,3 +46,10 @@ class LLMManager:
     def get_current_provider(self) -> LLMProvider:
         """Returns the currently selected LLM provider instance."""
         return self.providers[self.current_provider]
+
+    def set_provider(self, provider_name: str):
+        """Sets the current provider to the specified one if it exists."""
+        if provider_name in self.providers:
+            self.current_provider = provider_name
+        else:
+            raise ValueError(f"Provider '{provider_name}' is not available.")
