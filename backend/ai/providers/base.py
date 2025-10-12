@@ -29,7 +29,7 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def set_model(self, model_name: str):
+    async def set_model(self, model: str):
         """
         Set the model to be used for text generation.
         """
