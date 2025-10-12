@@ -36,7 +36,7 @@ class LLMManager:
                 "No LLM providers were initialized. Please set API keys in .env."
             )
 
-        default_provider = os.getenv("DEFAULT_AI_PROVIDER", "openai")
+        default_provider = os.getenv("DEFAULT_PROVIDER", "openai")
         self.current_provider = (
             default_provider
             if default_provider in self.providers
