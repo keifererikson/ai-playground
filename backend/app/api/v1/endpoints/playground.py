@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Body, HTTPException
 from ai.llm_manager import LLMManager
+from app.api.v1.dependencies import get_api_key
 from app.api.v1.schemas import (
     TestPromptRequest,
     TestPromptResponse,
@@ -61,6 +62,7 @@ async def update_settings(
     "/test",
     response_model=TestPromptResponse,
     summary="Test LLM with a prompt",
+    dependencies=[Depends(get_api_key)],
 )
 async def test_prompt(
     llm_manager=Depends(LLMManager), payload: TestPromptRequest = Body(...)
@@ -75,7 +77,10 @@ async def test_prompt(
 
 
 @router.post(
-    "/embed", response_model=EmbeddingResponse, summary="Generate text embedding"
+    "/embed",
+    response_model=EmbeddingResponse,
+    summary="Generate text embedding",
+    dependencies=[Depends(get_api_key)],
 )
 async def create_embedding(
     llm_manager=Depends(LLMManager), payload: EmbeddingRequest = Body(...)
