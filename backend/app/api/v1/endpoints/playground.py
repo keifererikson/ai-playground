@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body, HTTPException
+from fastapi import APIRouter, Depends, Body, HTTPException, Request
 from ai.llm_manager import LLMManager
 from app.api.v1.dependencies import get_api_key
 from app.api.v1.schemas import (
@@ -16,8 +16,9 @@ router = APIRouter()
 @router.get(
     "/settings", response_model=SettingsResponse, summary="Get current LLM settings"
 )
-async def get_settings(llm_manager=Depends(LLMManager)):
+async def get_settings(request: Request):
     """Retrieves the current LLM settings including provider, model, temperature, and available models."""
+    llm_manager: LLMManager = request.app.state.llm_manager
 
     provider = llm_manager.get_current_provider()
 
@@ -26,7 +27,7 @@ async def get_settings(llm_manager=Depends(LLMManager)):
     return SettingsResponse(
         provider=llm_manager.current_provider,
         model=provider.model,
-        embedding_model=provider.embedding_model,
+        embedding_model=await provider.get_embedding_model(),
         temperature=provider.temperature,
         available_models=available_models,
     )
@@ -37,10 +38,10 @@ async def get_settings(llm_manager=Depends(LLMManager)):
     response_model=SettingsResponse,
     summary="Update LLM settings",
 )
-async def update_settings(
-    llm_manager=Depends(LLMManager), payload: UpdateSettingsRequest = Body(...)
-):
+async def update_settings(request: Request, payload: UpdateSettingsRequest = Body(...)):
     """Updates the LLM settings including provider, model, and temperature."""
+    llm_manager: LLMManager = request.app.state.llm_manager
+
     if payload.provider is not None:
         try:
             llm_manager.set_provider(payload.provider)
@@ -55,7 +56,14 @@ async def update_settings(
     if payload.temperature is not None:
         await provider.set_temperature(payload.temperature)
 
-    return await get_settings(llm_manager)
+    available_models = await provider.list_models()
+    return SettingsResponse(
+        provider=llm_manager.current_provider,
+        model=provider.model,
+        embedding_model=await provider.get_embedding_model(),
+        temperature=provider.temperature,
+        available_models=available_models,
+    )
 
 
 @router.post(
@@ -64,10 +72,10 @@ async def update_settings(
     summary="Test LLM with a prompt",
     dependencies=[Depends(get_api_key)],
 )
-async def test_prompt(
-    llm_manager=Depends(LLMManager), payload: TestPromptRequest = Body(...)
-):
+async def test_prompt(request: Request, payload: TestPromptRequest = Body(...)):
     """Sends a test prompt to the current LLM provider and returns the response."""
+    llm_manager: LLMManager = request.app.state.llm_manager
+
     provider = llm_manager.get_current_provider()
     try:
         response_text = await provider.generate_text(payload.prompt)
@@ -82,14 +90,14 @@ async def test_prompt(
     summary="Generate text embedding",
     dependencies=[Depends(get_api_key)],
 )
-async def create_embedding(
-    llm_manager=Depends(LLMManager), payload: EmbeddingRequest = Body(...)
-):
+async def create_embedding(request: Request, payload: EmbeddingRequest = Body(...)):
     """
     Generates a text embedding for the given input text.
     Returns the truncated embedding vector and the model used.
 
     """
+    llm_manager: LLMManager = request.app.state.llm_manager
+
     provider = llm_manager.get_current_provider()
     try:
         provider = llm_manager.get_current_provider()

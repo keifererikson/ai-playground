@@ -59,3 +59,10 @@ class LLMProvider(ABC):
         Set the temperature for text generation.
         """
         pass
+
+    @abstractmethod
+    async def validate_credentials(self) -> None:
+        """
+        Validate the API credentials.
+        """
+        pass

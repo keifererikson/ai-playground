@@ -145,3 +145,18 @@ class OpenAIProvider(LLMProvider):
         """
         self.temperature = temperature
         self._update_llm_instance()
+
+    async def validate_credentials(self) -> None:
+        """Validates the OpenAI API credentials by making a test API call.
+
+        Returns:
+            True if the credentials are valid, False otherwise.
+
+        Raises:
+            Exception: If the validation process encounters an error.
+        """
+        try:
+            client = openai.AsyncOpenAI(api_key=self.api_key)
+            await client.models.retrieve("gpt-3.5-turbo")
+        except Exception as e:
+            raise e

@@ -29,7 +29,6 @@ class LLMManager:
             api_key = os.getenv(f"{name.upper()}_API_KEY")
             if api_key:
                 self.providers[name] = provider_class(api_key=api_key)
-                print(f"Initialized {name} provider.")
 
         if not self.providers:
             raise ValueError(
@@ -53,3 +52,18 @@ class LLMManager:
             self.current_provider = provider_name
         else:
             raise ValueError(f"Provider '{provider_name}' is not available.")
+
+    async def validate_providers(self):
+        """Validates all initialized providers and removes those that fail."""
+        validated_providers = {}
+        for name, provider in self.providers.items():
+            try:
+                await provider.validate_credentials()
+                validated_providers[name] = provider
+                print(f"\t✅ Provider '{name}' validated successfully.")
+            except Exception as e:
+                print(f"❌ Provider '{name}' validation failed: {e}")
+
+        self.providers = validated_providers
+        if not self.providers:
+            raise RuntimeError("No valid LLM providers could be initialized.")
