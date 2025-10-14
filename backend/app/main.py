@@ -1,5 +1,6 @@
 import contextlib
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.api.v1.endpoints import playground
 from ai.llm_manager import LLMManager
@@ -22,6 +23,14 @@ app = FastAPI(
     title="AI Playground",
     description="An interactive platform to experiment with various AI models and providers.",
     version="0.0.1",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(
