@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { ConfigurationPanel } from '@/components/ConfigurationPanel';
 import { PlaygroundPanel } from '@/components/PlaygroundPanel';
 
 export default function Home() {
+  const [apiKey, setApiKey] = useState("");
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="mx-auto w-full max-w-4xl">
@@ -22,9 +27,9 @@ export default function Home() {
           </p>
         </div>
 
-        <ConfigurationPanel />
+        <ConfigurationPanel apiKey={apiKey} setApiKey={setApiKey} />
 
-        <PlaygroundPanel />
+        <PlaygroundPanel apiKey={apiKey} />
 
       </div>
     </main>

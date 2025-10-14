@@ -22,10 +22,14 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/app/context/SettingsContext";
 
-export function ConfigurationPanel() {
+interface ConfigurationPanelProps {
+  apiKey: string;
+  setApiKey: (key: string) => void;
+}
+
+export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProps) {
   const { settings, saveSettings, isLoading } = useSettings();
 
-  const [apiKey, setApiKey] = useState("");
   const [localProvider, setLocalProvider] = useState("");
   const [localModel, setLocalModel] = useState("");
   const [localTemperature, setLocalTemperature] = useState(0.7);
@@ -93,19 +97,18 @@ export function ConfigurationPanel() {
       <CardHeader>
         <CardTitle>Configuration</CardTitle>
         <CardDescription>
-          Set your API key and adjust the model settings.
+          Set your Access Code and adjust the model settings.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="api-key">API Key</Label>
+            <Label htmlFor="access-code">Access Code</Label>
             <Input
-              id="api-key"
+              id="access-code"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              type="password"
-              placeholder="Enter your API key"
+              placeholder="Enter your Access Code"
             />
           </div>
           <div className="space-y-2">
