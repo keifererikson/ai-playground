@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,10 +20,73 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-
-const isDirty = true; // Placeholder for form dirty state
+import { useSettings } from "@/app/context/SettingsContext";
 
 export function ConfigurationPanel() {
+  const { settings, saveSettings, isLoading } = useSettings();
+
+  const [localProvider, setLocalProvider] = useState("");
+  const [localModel, setLocalModel] = useState("");
+  const [localTemperature, setLocalTemperature] = useState(0.7);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (settings) {
+      setLocalProvider(settings.provider);
+      setLocalModel(settings.model);
+      setLocalTemperature(settings.temperature);
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    if (!settings) return;
+
+    const hasChanged =
+      localProvider !== settings.provider ||
+      localModel !== settings.model ||
+      localTemperature !== settings.temperature;
+
+    setIsDirty(hasChanged);
+  }, [localProvider, localModel, localTemperature, settings]);
+
+  const handleSave = async () => {
+    const payload = {
+      provider: localProvider,
+      model: localModel,
+      temperature: localTemperature,
+    }
+    setIsSaving(true);
+    try {
+      await saveSettings(payload);
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (settings) {
+      setLocalProvider(settings.provider);
+      setLocalModel(settings.model);
+      setLocalTemperature(settings.temperature);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Configuration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Loading settings...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-4">
       <CardHeader>
@@ -41,23 +107,31 @@ export function ConfigurationPanel() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="provider">Provider</Label>
-            <Select>
+            <Select value={localProvider} onValueChange={setLocalProvider}>
               <SelectTrigger id="provider">
                 <SelectValue placeholder="Select a provider" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="openai">OpenAI</SelectItem>
+                {settings?.available_providers.map((provider) => (
+                  <SelectItem key={provider} value={provider}>
+                    {provider}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="model">Model</Label>
-            <Select>
+            <Select value={localModel} onValueChange={setLocalModel}>
               <SelectTrigger id="model">
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
+                {settings?.available_models.map((model) => (
+                  <SelectItem key={model} value={model}>
+                    {model}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -65,7 +139,8 @@ export function ConfigurationPanel() {
             <Label htmlFor="temperature">Temperature: 0.7</Label>
             <Slider
               id="temperature"
-              defaultValue={[0.7]}
+              value={[localTemperature]}
+              onValueChange={(value) => setLocalTemperature(value[0])}
               max={2}
               step={0.1}
             />
