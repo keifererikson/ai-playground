@@ -43,6 +43,7 @@ class SettingsResponse(BaseModel):
     embedding_model: Optional[str] = None
     temperature: float
     available_models: List[str]
+    available_providers: List[str]
 
 
 class UpdateSettingsRequest(BaseModel):

@@ -30,6 +30,7 @@ async def get_settings(request: Request):
         embedding_model=await provider.get_embedding_model(),
         temperature=provider.temperature,
         available_models=available_models,
+        available_providers=list(llm_manager.providers.keys()),
     )
 
 
