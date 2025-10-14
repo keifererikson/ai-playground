@@ -142,7 +142,7 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="temperature">Temperature: 0.7</Label>
+            <Label htmlFor="temperature">Temperature: {localTemperature}</Label>
             <Slider
               id="temperature"
               value={[localTemperature]}
