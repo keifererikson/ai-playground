@@ -4,6 +4,7 @@ export interface Settings {
   embeddings_model: string;
   temperature: number;
   available_models: string[];
+  available_providers: string[];
 }
 
 export interface UpdateSettingsPayload {
