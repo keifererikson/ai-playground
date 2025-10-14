@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/app/context/SettingsContext";
+import { toast } from "sonner";
 
 interface ConfigurationPanelProps {
   apiKey: string;
@@ -63,9 +64,11 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
     }
     setIsSaving(true);
     try {
-      saveSettings(payload, apiKey);
+      await saveSettings(payload, apiKey);
+      toast.success("Settings saved successfully!");
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast.error("Failed to save settings:", { description: errorMessage });
     } finally {
       setIsSaving(false);
     }

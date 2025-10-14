@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Icon } from "@iconify/react"
 import { testPrompt } from "@/app/lib/api"
+import { toast } from "sonner"
 
 interface PlaygroundPanelProps {
   apiKey: string;
@@ -20,11 +21,13 @@ export function PlaygroundPanel({ apiKey }: PlaygroundPanelProps) {
 
   const handleSubmit = async () => {
     if (!prompt) {
-      setError("Please enter a prompt.");
+      setError("Prompt cannot be empty.");
+      toast.error(error);
       return;
     }
     if (!apiKey) {
       setError("Please enter your Access Code in the configuration panel.");
+      toast.error(error);
       return;
     }
 
@@ -37,6 +40,7 @@ export function PlaygroundPanel({ apiKey }: PlaygroundPanelProps) {
       setResponse(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
+      toast.error("Failed to get response", { description: error });
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +64,7 @@ export function PlaygroundPanel({ apiKey }: PlaygroundPanelProps) {
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}
             className="min-h-[120px]"
+            error={!!error}
           />
         </div>
         <Button onClick={handleSubmit} disabled={isLoading}>
