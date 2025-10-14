@@ -8,7 +8,7 @@ interface SettingsContextType {
   settings: Settings | null;
   isLoading: boolean;
   error: string | null;
-  saveSettings: (payload: UpdateSettingsPayload) => void;
+  saveSettings: (payload: UpdateSettingsPayload, apiKey: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -34,10 +34,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     fetchInitialSettings();
   }, []);
 
-  const saveSettings = async (payload: UpdateSettingsPayload) => {
+  const saveSettings = async (payload: UpdateSettingsPayload, apiKey: string) => {
     if (!settings) return;
     try {
-      const updatedSettings = await updateSettings(payload);
+      const updatedSettings = await updateSettings(payload, apiKey);
       setSettings(updatedSettings);
     } catch (err) {
       console.error('Failed to update settings:', err);

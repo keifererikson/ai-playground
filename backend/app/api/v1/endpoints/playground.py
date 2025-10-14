@@ -38,6 +38,7 @@ async def get_settings(request: Request):
     "/settings",
     response_model=SettingsResponse,
     summary="Update LLM settings",
+    dependencies=[Depends(get_api_key)],
 )
 async def update_settings(request: Request, payload: UpdateSettingsRequest = Body(...)):
     """Updates the LLM settings including provider, model, and temperature."""
@@ -64,6 +65,7 @@ async def update_settings(request: Request, payload: UpdateSettingsRequest = Bod
         embedding_model=await provider.get_embedding_model(),
         temperature=provider.temperature,
         available_models=available_models,
+        available_providers=list(llm_manager.providers.keys()),
     )
 
 

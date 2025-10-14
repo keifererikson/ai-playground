@@ -25,6 +25,7 @@ import { useSettings } from "@/app/context/SettingsContext";
 export function ConfigurationPanel() {
   const { settings, saveSettings, isLoading } = useSettings();
 
+  const [apiKey, setApiKey] = useState("");
   const [localProvider, setLocalProvider] = useState("");
   const [localModel, setLocalModel] = useState("");
   const [localTemperature, setLocalTemperature] = useState(0.7);
@@ -58,7 +59,7 @@ export function ConfigurationPanel() {
     }
     setIsSaving(true);
     try {
-      await saveSettings(payload);
+      saveSettings(payload, apiKey);
     } catch (error) {
       console.error("Failed to save settings:", error);
     } finally {
@@ -101,6 +102,8 @@ export function ConfigurationPanel() {
             <Label htmlFor="api-key">API Key</Label>
             <Input
               id="api-key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
               type="password"
               placeholder="Enter your API key"
             />
@@ -148,8 +151,20 @@ export function ConfigurationPanel() {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline">Reset to Defaults</Button>
-        <Button disabled={!isDirty}>Save Configuration</Button>
+        <Button
+          variant="outline"
+          onClick={handleReset}
+          disabled={!isDirty || isSaving}
+        >
+          Reset to Defaults
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!isDirty || isSaving}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Save Configuration
+        </Button>
       </CardFooter>
     </Card>
   )

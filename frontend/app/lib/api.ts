@@ -23,11 +23,12 @@ export async function getSettings(): Promise<Settings> {
   return response.json();
 };
 
-export async function updateSettings(payload: UpdateSettingsPayload): Promise<Settings> {
+export async function updateSettings(payload: UpdateSettingsPayload, apiKey: string): Promise<Settings> {
   const response = await fetch(`${API_BASE_URL}/api/v1/settings`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
     },
     body: JSON.stringify(payload),
   });
@@ -43,7 +44,7 @@ export async function testPrompt(prompt: string, apiKey: string): Promise<string
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      'X-API-Key': apiKey,
     },
     body: JSON.stringify({ prompt }),
   });
