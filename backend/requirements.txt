@@ -15,5 +15,7 @@ langchain-deepseek
 requests
 
 # Database
-sqlalchemy
+sqlalchemy[asyncio]
+psycopg2-binary
+alembic
 asyncpg
