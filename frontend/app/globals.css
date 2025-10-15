@@ -43,6 +43,31 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+@theme {
+  --animate-typing-dot-flashing: dot-flashing 1.4s infinite linear;
+  --animate-typing-dot-flashing-delay-200: dot-flashing 1.4s 0.2s infinite linear;
+  --animate-typing-dot-flashing-delay-400: dot-flashing 1.4s 0.4s infinite linear;
+  --animate-typing-dot-bounce: typing-dot-bounce 1.25s ease-out infinite;
+
+  @keyframes typing-dot-flashing {
+    0%, 100% {
+      opacity: 0.2;
+    }
+    20% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes typing-dot-bounce {
+    0%, 40% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-0.25rem);
+    }
+  }
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
