@@ -22,13 +22,19 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/app/context/SettingsContext";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { LucideSave } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ConfigurationPanelProps {
   apiKey: string;
   setApiKey: (key: string) => void;
+  accessCodeError: string | null;
 }
 
-export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProps) {
+export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: ConfigurationPanelProps) {
   const { settings, saveSettings, isLoading } = useSettings();
 
   const [localProvider, setLocalProvider] = useState("");
@@ -82,19 +88,6 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Configuration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Loading settings...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="mb-4">
       <CardHeader>
@@ -104,7 +97,7 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-6 max-w-3xl mx-auto">
           <div className="space-y-2">
             <Label htmlFor="access-code">Access Code</Label>
             <Input
@@ -112,47 +105,76 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Enter your Access Code"
+              className={cn(
+                accessCodeError && "border-destructive focus-visible:ring-destructive"
+              )}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="provider">Provider</Label>
-            <Select value={localProvider} onValueChange={setLocalProvider}>
-              <SelectTrigger id="provider">
-                <SelectValue placeholder="Select a provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {settings?.available_providers.map((provider) => (
-                  <SelectItem key={provider} value={provider}>
-                    {provider}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="model">Model</Label>
-            <Select value={localModel} onValueChange={setLocalModel}>
-              <SelectTrigger id="model">
-                <SelectValue placeholder="Select a model" />
-              </SelectTrigger>
-              <SelectContent>
-                {settings?.available_models.map((model) => (
-                  <SelectItem key={model} value={model}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="temperature">Temperature: {localTemperature}</Label>
-            <Slider
-              id="temperature"
-              value={[localTemperature]}
-              onValueChange={(value) => setLocalTemperature(value[0])}
-              max={2}
-              step={0.1}
-            />
+          <Separator />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="provider">Provider</Label>
+              {isLoading ? (
+                <Skeleton className="h-9 w-full" />
+              ) : (
+                <Select value={localProvider} onValueChange={setLocalProvider}>
+                  <SelectTrigger id="provider" className="w-full">
+                    <SelectValue placeholder="Select a provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {settings?.available_providers.map((provider) => (
+                      <SelectItem key={provider} value={provider}>
+                        {provider}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="model">Model</Label>
+              {isLoading ? (
+                <Skeleton className="h-9 w-full" />
+              ) : (
+                <Select value={localModel} onValueChange={setLocalModel}>
+                  <SelectTrigger id="model" className="w-full">
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {settings?.available_models.map((model) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="temperature">Temperature: {isLoading ? (
+                <>
+                  <Skeleton className="h-3 w-5 inline-block" />
+                </>
+              ) : (
+                <>
+                  {localTemperature}
+                </>
+              )}
+              </Label>
+              {isLoading ? (
+                <Skeleton className="h-5 mt-4 w-full" />
+              ) : (
+                <Slider
+                  id="temperature"
+                  value={[localTemperature]}
+                  onValueChange={(value) => setLocalTemperature(value[0])}
+                  max={2}
+                  step={0.1}
+                  className="pt-3"
+                />)}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -168,8 +190,17 @@ export function ConfigurationPanel({ apiKey, setApiKey }: ConfigurationPanelProp
           onClick={handleSave}
           disabled={!isDirty || isSaving}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
+
         >
-          Save Configuration
+          {isSaving ? (
+            <>
+              <Spinner /> Saving...
+            </>
+          ) : (
+            <>
+              <LucideSave /> Save Configuration
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
