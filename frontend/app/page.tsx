@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { ConfigurationPanel } from '@/components/ConfigurationPanel';
 import { PlaygroundPanel } from '@/components/PlaygroundPanel';
+import { HealthiconsArtificialIntelligence } from '@/components/icons/AiIcon';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState("");
@@ -16,11 +17,7 @@ export default function Home() {
             <h1 className="pb-1 text-3xl font-black md:text-4xl bg-gradient-to-r from-fuchsia-800 to-primary bg-clip-text text-transparent">
               AI Playground
             </h1>
-            <Icon
-              className="relative bottom-7 right-4"
-              icon="healthicons:artificial-intelligence"
-              width="48"
-            />
+            <HealthiconsArtificialIntelligence className="relative bottom-7 right-4" />
           </div>
           <p className="mb-8 text-muted-foreground">
             A playground to test out many different AI providers and models.

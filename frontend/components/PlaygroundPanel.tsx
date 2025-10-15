@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Icon } from "@iconify/react"
 import { testPrompt } from "@/app/lib/api"
 import { toast } from "sonner"
+import { LucideSendHorizontal } from "lucide-react"
 
 interface PlaygroundPanelProps {
   apiKey: string;
@@ -67,10 +68,12 @@ export function PlaygroundPanel({ apiKey }: PlaygroundPanelProps) {
             error={!!error}
           />
         </div>
-        <Button onClick={handleSubmit} disabled={isLoading}>
-          <Icon icon="mdi:send" className="mr-2 h-4 w-4" />
-          Submit Prompt
-        </Button>
+        <div className="flex justify-end">
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            <LucideSendHorizontal />
+            Submit Prompt
+          </Button>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="response">Response</Label>
           <div
