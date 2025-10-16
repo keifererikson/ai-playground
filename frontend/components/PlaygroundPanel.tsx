@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSettings } from "@/app/context/SettingsContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,6 +44,12 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
 
   const embeddingsSupported = !!settings?.embedding_model;
   const isLocked = !apiKey;
+
+  useEffect(() => {
+    if (activeTab === "embeddings" && !embeddingsSupported) {
+      setActiveTab("text-generation");
+    }
+  }, [settings, activeTab, embeddingsSupported]);
 
 
   const handleSubmit = async () => {
