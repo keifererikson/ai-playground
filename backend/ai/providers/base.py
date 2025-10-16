@@ -30,14 +30,13 @@ class LLMProvider(ABC):
             f"{self.__class__.__name__} does not support embeddings."
         )
 
-    async def get_embedding_model(self) -> str:
+    @abstractmethod
+    async def get_embedding_model(self) -> str | None:
         """
         Get the embedding model name.
         This method is optional and may not be implemented by all providers.
         """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} does not support embeddings."
-        )
+        pass
 
     @abstractmethod
     async def list_models(self) -> List[str]:

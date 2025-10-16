@@ -35,12 +35,22 @@ class EmbeddingResponse(BaseModel):
     embedding: List[float]
 
 
+class ModelListResponse(BaseModel):
+    """Response model for listing available models."""
+
+    models: List[str] = Field(
+        ...,
+        description="A list of available model names.",
+        examples=[["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]],
+    )
+
+
 class SettingsResponse(BaseModel):
     """Response model for current settings."""
 
     provider: str
     model: str
-    embedding_model: Optional[str] = None
+    embedding_model: str | None = None
     temperature: float
     available_models: List[str]
     available_providers: List[str]
