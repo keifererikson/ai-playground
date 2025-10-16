@@ -56,21 +56,21 @@ export async function testPrompt(prompt: string, apiKey: string): Promise<string
   return result.response;
 }
 
-export async function embedPrompt(prompt: string, apiKey: string): Promise<number[]> {
+export async function embedPrompt(text: string, apiKey: string): Promise<number[]> {
   const response = await fetch(`${API_BASE_URL}/api/v1/embed`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-API-Key': apiKey,
     },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ text }),
   });
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.detail || 'Failed to get embeddings');
   }
   const result = await response.json();
-  return result.embedding;
+  return result;
 }
 
 
