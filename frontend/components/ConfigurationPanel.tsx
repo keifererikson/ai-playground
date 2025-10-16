@@ -21,12 +21,19 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/app/context/SettingsContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { LucideSave } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getModelsForProvider } from "@/app/lib/api";
 
 interface ConfigurationPanelProps {
   apiKey: string;
@@ -42,14 +49,45 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
   const [localTemperature, setLocalTemperature] = useState(0.7);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isModelsLoading, setIsModelsLoading] = useState(false);
+
 
   useEffect(() => {
     if (settings) {
       setLocalProvider(settings.provider);
       setLocalModel(settings.model);
       setLocalTemperature(settings.temperature);
+      setAvailableModels(settings.available_models);
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (!localProvider) return;
+
+    const fetchModels = async () => {
+      setIsModelsLoading(true);
+      try {
+        const models = await getModelsForProvider(localProvider);
+        setAvailableModels(models);
+        if (!models.includes(localModel)) {
+          setLocalModel(models[0] || "");
+        }
+      } catch (error) {
+        toast.error("Failed to fetch models for provider.");
+        setAvailableModels([]);
+      } finally {
+        setIsModelsLoading(false);
+      }
+    };
+
+    if (localProvider !== settings?.provider) {
+      fetchModels();
+    } else {
+      setAvailableModels(settings.available_models);
+      setLocalModel(settings.model);
+    }
+  }, [localProvider, settings]);
 
   useEffect(() => {
     if (!settings) return;
@@ -100,15 +138,26 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
         <div className="space-y-6 max-w-3xl mx-auto">
           <div className="space-y-2">
             <Label htmlFor="access-code">Access Code</Label>
-            <Input
-              id="access-code"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Access Code"
-              className={cn(
-                accessCodeError && "border-destructive focus-visible:ring-destructive"
-              )}
-            />
+            <TooltipProvider>
+              <Tooltip defaultOpen={!apiKey} delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Input
+                    id="access-code"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter your Access Code"
+                    className={cn(
+                      accessCodeError && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                </TooltipTrigger>
+                {!apiKey && (
+                  <TooltipContent>
+                    <p>Please enter your Access Code to begin.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <Separator />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -134,15 +183,15 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
 
             <div className="space-y-2">
               <Label htmlFor="model">Model</Label>
-              {isLoading ? (
+              {isLoading || isModelsLoading ? (
                 <Skeleton className="h-9 w-full" />
               ) : (
-                <Select value={localModel} onValueChange={setLocalModel}>
+                <Select value={localModel} onValueChange={setLocalModel} disabled={availableModels.length === 0}>
                   <SelectTrigger id="model" className="w-full">
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    {settings?.available_models.map((model) => (
+                    {availableModels.map((model) => (
                       <SelectItem key={model} value={model}>
                         {model}
                       </SelectItem>
@@ -188,7 +237,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
         </Button>
         <Button
           onClick={handleSave}
-          disabled={!isDirty || isSaving}
+          disabled={!isDirty || isSaving || isModelsLoading}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
 
         >

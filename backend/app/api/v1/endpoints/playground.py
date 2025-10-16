@@ -7,6 +7,7 @@ from app.api.v1.schemas import (
     TestPromptResponse,
     EmbeddingRequest,
     EmbeddingResponse,
+    ModelListResponse,
     SettingsResponse,
     UpdateSettingsRequest,
 )
@@ -14,6 +15,28 @@ from app.database import get_db
 from app import crud
 
 router = APIRouter()
+
+
+@router.get(
+    "/providers/{provider_name}/models",
+    response_model=ModelListResponse,
+    summary="List available models for a provider",
+)
+async def get_models_for_provider(request: Request, provider_name: str):
+    """Lists available models for the specified LLM provider."""
+    llm_manager: LLMManager = request.app.state.llm_manager
+
+    if provider_name not in llm_manager.providers:
+        raise HTTPException(
+            status_code=404, detail=f"Provider '{provider_name}' not found."
+        )
+
+    try:
+        provider = llm_manager.providers[provider_name]
+        available_models = await provider.list_models()
+        return ModelListResponse(models=available_models)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving models: {e}")
 
 
 @router.get(
@@ -124,6 +147,12 @@ async def create_embedding(request: Request, payload: EmbeddingRequest = Body(..
         provider = llm_manager.get_current_provider()
         embedding = await provider.generate_embedding(payload.text)
         embedding_model = await provider.get_embedding_model()
+
+        if embedding_model is None:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Provider '{llm_manager.current_provider}' does not have an embedding model.",
+            )
 
         return EmbeddingResponse(embedding=embedding[:10], model=embedding_model)
     except NotImplementedError:
