@@ -8,7 +8,7 @@ gunicorn
 langchain
 langchain-openai
 langchain-google-genai
-google-generativeai
+google-genai
 langchain-anthropic
 anthropic
 langchain-xai

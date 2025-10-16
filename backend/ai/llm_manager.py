@@ -1,8 +1,10 @@
 import os
 from typing import Dict, Type
+
 from .providers.base import LLMProvider
 from .providers.openai_provider import OpenAIProvider
 from .providers.anthropic_provider import AnthropicProvider
+from ai.providers.gemini_provider import GeminiProvider
 
 
 class LLMManager:
@@ -25,6 +27,7 @@ class LLMManager:
         provider_registry: Dict[str, Type[LLMProvider]] = {
             "openai": OpenAIProvider,
             "anthropic": AnthropicProvider,
+            "gemini": GeminiProvider,
         }
 
         for name, provider_class in provider_registry.items():
