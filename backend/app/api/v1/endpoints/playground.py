@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 from ai.llm_manager import LLMManager
 from app.api.v1.dependencies import get_api_key
 from app.api.v1.schemas import (
@@ -9,6 +10,8 @@ from app.api.v1.schemas import (
     SettingsResponse,
     UpdateSettingsRequest,
 )
+from app.database import get_db
+from app import crud
 
 router = APIRouter()
 
@@ -16,19 +19,25 @@ router = APIRouter()
 @router.get(
     "/settings", response_model=SettingsResponse, summary="Get current LLM settings"
 )
-async def get_settings(request: Request):
-    """Retrieves the current LLM settings including provider, model, temperature, and available models."""
+async def get_settings(request: Request, db: AsyncSession = Depends(get_db)):
+    """Retrieves the current LLM settings from the database."""
     llm_manager: LLMManager = request.app.state.llm_manager
+
+    db_settings = await crud.get_settings(db)
+    if not db_settings:
+        raise HTTPException(
+            status_code=500, detail="Settings not found in the database."
+        )
 
     provider = llm_manager.get_current_provider()
 
     available_models = await provider.list_models()
 
     return SettingsResponse(
-        provider=llm_manager.current_provider,
-        model=provider.model,
+        provider=db_settings.provider,
+        model=db_settings.model,
         embedding_model=await provider.get_embedding_model(),
-        temperature=provider.temperature,
+        temperature=db_settings.temperature,
         available_models=available_models,
         available_providers=list(llm_manager.providers.keys()),
     )
@@ -40,15 +49,24 @@ async def get_settings(request: Request):
     summary="Update LLM settings",
     dependencies=[Depends(get_api_key)],
 )
-async def update_settings(request: Request, payload: UpdateSettingsRequest = Body(...)):
-    """Updates the LLM settings including provider, model, and temperature."""
+async def update_settings(
+    request: Request,
+    payload: UpdateSettingsRequest = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Updates the LLM settings in the database and synchronizes the LLM manager."""
     llm_manager: LLMManager = request.app.state.llm_manager
 
+    settings_data = payload.model_dump(exclude_unset=True)
+    updated_db_settings = await crud.update_settings(db, settings_data)
+
+    if not updated_db_settings:
+        raise HTTPException(
+            status_code=500, detail="Failed to update settings in the database."
+        )
+
     if payload.provider is not None:
-        try:
-            llm_manager.set_provider(payload.provider)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        llm_manager.set_provider(payload.provider)
 
     provider = llm_manager.get_current_provider()
 
@@ -60,10 +78,10 @@ async def update_settings(request: Request, payload: UpdateSettingsRequest = Bod
 
     available_models = await provider.list_models()
     return SettingsResponse(
-        provider=llm_manager.current_provider,
-        model=provider.model,
+        provider=updated_db_settings.provider,
+        model=updated_db_settings.model,
         embedding_model=await provider.get_embedding_model(),
-        temperature=provider.temperature,
+        temperature=updated_db_settings.temperature,
         available_models=available_models,
         available_providers=list(llm_manager.providers.keys()),
     )

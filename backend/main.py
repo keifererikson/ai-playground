@@ -2,10 +2,13 @@ import contextlib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.api.v1.endpoints import playground
-from ai.llm_manager import LLMManager
 
 load_dotenv()
+
+from app.api.v1.endpoints import playground
+from ai.llm_manager import LLMManager
+from app.database import AsyncSessionLocal
+from app import crud, models
 
 
 @contextlib.asynccontextmanager
@@ -14,6 +17,23 @@ async def lifespan(app: FastAPI):
     await llm_manager.validate_providers()
 
     app.state.llm_manager = llm_manager
+
+    async with AsyncSessionLocal() as db:
+        db_settings = await crud.get_settings(db)
+        if not db_settings:
+            print("No settings found in db, initializing default settings...")
+            default_settings = models.Settings()
+            db.add(default_settings)
+            await db.commit()
+            await db.refresh(default_settings)
+            db_settings = default_settings
+
+        print("Syncing LLM Manager with settings from database...")
+        llm_manager.set_provider(db_settings.provider)
+        provider = llm_manager.get_current_provider()
+
+        await provider.set_model(db_settings.model)
+        await provider.set_temperature(db_settings.temperature)
 
     yield
 

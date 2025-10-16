@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from . import models
 
 
-async def get_settings(db: AsyncSession):
+async def get_settings(db: AsyncSession) -> models.Settings | None:
     """Fetch the current settings from the database."""
     result = await db.execute(select(models.Settings).where(models.Settings.id == 1))
     return result.scalars().first()
