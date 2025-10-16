@@ -126,7 +126,7 @@ class OpenAIProvider(LLMProvider):
             return sorted(filtered_models)
         except Exception as e:
             print(f"Error listing OpenAI models: {e}")
-            return ["gpt-5-nano", "gpt-4o-mini", "gpt-3.5-turbo"]  # Fallback models
+            raise
 
     async def set_model(self, model: str):
         """Sets the model to be used for text generation.
@@ -147,14 +147,13 @@ class OpenAIProvider(LLMProvider):
         self._update_llm_instance()
 
     async def validate_credentials(self) -> None:
-        """Validates the OpenAI API credentials by making a test API call.
-
-        Returns:
-            True if the credentials are valid, False otherwise.
+        """
+        Validates the OpenAI API credentials by making a test API call.
 
         Raises:
-            Exception: If the validation process encounters an error.
+            Exception: If the API key is invalid or another API error occurs.
         """
+
         try:
             client = openai.AsyncOpenAI(api_key=self.api_key)
             await client.models.retrieve("gpt-3.5-turbo")
