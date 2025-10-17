@@ -72,3 +72,10 @@ class LLMManager:
         self.providers = validated_providers
         if not self.providers:
             raise RuntimeError("No valid LLM providers could be initialized.")
+
+        if self.current_provider not in self.providers:
+            print(
+                f"⚠️ Current provider '{self.current_provider}' failed validation. Resetting..."
+            )
+            self.current_provider = list(self.providers.keys())[0]
+            print(f"✅ Current provider reset to '{self.current_provider}'.")
