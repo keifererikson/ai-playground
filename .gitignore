@@ -43,6 +43,10 @@ htmlcov/
 .pytype/
 .ruff_cache/
 
+# SQLite database files
+*.sqlite3
+*.db
+
 # ===================================================================
 #  Frontend - Node.js / Next.js / Vercel
 # ===================================================================
