@@ -43,6 +43,13 @@ interface ConfigurationPanelProps {
   accessCodeError: string | null;
 }
 
+const providerTempLimits: { [key: string]: number } = {
+  'openai': 2.0,
+  'anthropic': 1.0,
+  'gemini': 1.0,
+  'default': 1.0,
+}
+
 export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: ConfigurationPanelProps) {
   const { settings, saveSettings, isLoading } = useSettings();
 
@@ -54,6 +61,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
 
+  const currentMaxTemp = providerTempLimits[localProvider] || providerTempLimits['default'];
 
   useEffect(() => {
     if (settings) {
@@ -101,6 +109,13 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
 
     setIsDirty(hasChanged);
   }, [localProvider, localModel, localTemperature, settings]);
+
+  useEffect(() => {
+    const newMax = providerTempLimits[localProvider] || providerTempLimits['default'];
+    if (localTemperature > newMax) {
+      setLocalTemperature(newMax);
+    }
+  }, [localTemperature, localProvider]);
 
   const handleSave = async () => {
     const payload = {
@@ -227,7 +242,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
                   id="temperature"
                   value={[localTemperature]}
                   onValueChange={(value) => setLocalTemperature(value[0])}
-                  max={2}
+                  max={currentMaxTemp}
                   step={0.1}
                   className="pt-3"
                 />)}
