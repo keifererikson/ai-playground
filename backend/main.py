@@ -7,33 +7,57 @@ load_dotenv()
 
 from app.api.v1.endpoints import playground
 from ai.llm_manager import LLMManager
-from app.database import AsyncSessionLocal
+from app.database import get_db, engine, Base
 from app import crud, models
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("Application startup: Creating database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("Database tables created (if they didn't exist).")
+
+    print("Initializing and validating LLM providers...")
     llm_manager = LLMManager()
     await llm_manager.validate_providers()
-
     app.state.llm_manager = llm_manager
+    print("LLM Manager initialized.")
 
-    async with AsyncSessionLocal() as db:
-        db_settings = await crud.get_settings(db)
-        if not db_settings:
-            print("No settings found in db, initializing default settings...")
-            default_settings = models.Settings()
-            db.add(default_settings)
-            await db.commit()
-            await db.refresh(default_settings)
-            db_settings = default_settings
+    print("Loading initial settings from database...")
+    async for db in get_db():
+        try:
+            db_settings = await crud.get_settings(db)
 
-        print("Syncing LLM Manager with settings from database...")
-        llm_manager.set_provider(db_settings.provider)
-        provider = llm_manager.get_current_provider()
+            if not db_settings:
+                print("No settings found. Seeding database with defaults...")
 
-        await provider.set_model(db_settings.model)
-        await provider.set_temperature(db_settings.temperature)
+                default_provider_name = list(llm_manager.providers.keys())[0]
+                default_provider = llm_manager.providers[default_provider_name]
+                available_models = await default_provider.list_models()
+                default_model = (
+                    available_models[0] if available_models else "default-model"
+                )
+
+                db_settings = await crud.create_default_settings(
+                    db=db, provider=default_provider_name, model=default_model
+                )
+                print(
+                    f"Default settings created: {default_provider_name} / {default_model}"
+                )
+
+            print(f"Applying settings: {db_settings.provider} / {db_settings.model}")
+            llm_manager.set_provider(db_settings.provider)
+            provider = llm_manager.get_current_provider()
+            await provider.set_model(db_settings.model)
+            await provider.set_temperature(db_settings.temperature)
+
+        except Exception as e:
+            print(f"CRITICAL: Failed to load or create settings: {e}")
+            raise e
+
+        finally:
+            break
 
     yield
 

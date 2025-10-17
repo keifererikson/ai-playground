@@ -8,7 +8,8 @@ from sqlalchemy.orm import declarative_base
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    print("WARNING: DATABASE_URL is not set. Defaulting to local ./sqlite_dev.db")
+    DATABASE_URL = "sqlite+aiosqlite:///./sqlite_dev.db"
 
 engine = create_async_engine(DATABASE_URL, echo=True, pool_recycle=1800)
 

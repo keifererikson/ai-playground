@@ -22,3 +22,18 @@ async def update_settings(db: AsyncSession, settings_data: dict):
     await db.commit()
     await db.refresh(db_settings)
     return db_settings
+
+
+async def create_default_settings(
+    db: AsyncSession, provider: str, model: str
+) -> models.Settings:
+    """
+    Creates the first, default settings row (ID=1) in the database.
+    """
+    new_settings = models.Settings(
+        id=1, provider=provider, model=model, temperature=0.7
+    )
+    db.add(new_settings)
+    await db.commit()
+    await db.refresh(new_settings)
+    return new_settings
