@@ -93,11 +93,11 @@ async def update_settings(
 
     provider = llm_manager.get_current_provider()
 
-    if payload.model is not None:
-        await provider.set_model(payload.model)
-
     if payload.temperature is not None:
         await provider.set_temperature(payload.temperature)
+
+    if payload.model is not None:
+        await provider.set_model(payload.model)
 
     available_models = await provider.list_models()
     return SettingsResponse(
