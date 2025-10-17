@@ -34,6 +34,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { LucideSave } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getModelsForProvider } from "@/app/lib/api";
+import { getProviderMetadata } from "@/app/lib/providers";
+
 
 interface ConfigurationPanelProps {
   apiKey: string;
@@ -171,11 +173,17 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
                     <SelectValue placeholder="Select a provider" />
                   </SelectTrigger>
                   <SelectContent>
-                    {settings?.available_providers.map((provider) => (
-                      <SelectItem key={provider} value={provider}>
-                        {provider}
-                      </SelectItem>
-                    ))}
+                    {settings?.available_providers.map((providerId) => {
+                      const { name, logo: Logo } = getProviderMetadata(providerId);
+                      return (
+                        <SelectItem key={providerId} value={providerId}>
+                          <div className="flex items-center gap-2">
+                            <Logo className="h-4 w-4" />
+                            <span>{name}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}
