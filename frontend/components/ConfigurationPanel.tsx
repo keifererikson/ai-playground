@@ -260,7 +260,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
         </Button>
         <Button
           onClick={handleSave}
-          disabled={!isDirty || isSaving || isModelsLoading}
+          disabled={!isDirty || isSaving || isModelsLoading || !apiKey}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
 
         >
