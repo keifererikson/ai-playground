@@ -71,7 +71,8 @@ app = FastAPI(
 
 origins = [
     "http://localhost:3000",
-    "http://10.0.0.10:3000",
+    "https://ai-playground-blush.vercel.app",
+    "https://playground.keifer.dev",
 ]
 
 app.add_middleware(
