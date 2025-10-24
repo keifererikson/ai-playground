@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from ai.llm_manager import LLMManager
-from app.api.v1.dependencies import get_api_key
+from app.api.v1.dependencies import verify_captcha
 from app.api.v1.schemas import (
     TestPromptRequest,
     TestPromptResponse,
@@ -70,7 +70,6 @@ async def get_settings(request: Request, db: AsyncSession = Depends(get_db)):
     "/settings",
     response_model=SettingsResponse,
     summary="Update LLM settings",
-    dependencies=[Depends(get_api_key)],
 )
 async def update_settings(
     request: Request,
@@ -114,7 +113,7 @@ async def update_settings(
     "/test",
     response_model=TestPromptResponse,
     summary="Test LLM with a prompt",
-    dependencies=[Depends(get_api_key)],
+    dependencies=[Depends(verify_captcha)],
 )
 async def test_prompt(request: Request, payload: TestPromptRequest = Body(...)):
     """Sends a test prompt to the current LLM provider and returns the response."""
@@ -132,7 +131,7 @@ async def test_prompt(request: Request, payload: TestPromptRequest = Body(...)):
     "/embed",
     response_model=EmbeddingResponse,
     summary="Generate text embedding",
-    dependencies=[Depends(get_api_key)],
+    dependencies=[Depends(verify_captcha)],
 )
 async def create_embedding(request: Request, payload: EmbeddingRequest = Body(...)):
     """

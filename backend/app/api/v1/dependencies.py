@@ -1,16 +1,41 @@
 import os
-from fastapi import HTTPException, Security, status
-from fastapi.security import APIKeyHeader
+import httpx
+from fastapi import Request, HTTPException, status
 
-api_key_header = APIKeyHeader(name="X-API-Key")
+HCAPTCHA_SECRET_KEY = os.getenv("HCAPTCHA_SECRET_KEY")
+HCAPTCHA_VERIFY_URL = "https://hcaptcha.com/siteverify"
 
 
-def get_api_key(api_key_header: str = Security(api_key_header)):
-    """Verifies that the X-API-Key header matches the one in the environment"""
-    correct_api_key = os.getenv("PLAYGROUND_API_KEY")
-    if not correct_api_key or api_key_header != correct_api_key:
+async def verify_captcha(request: Request):
+    """Verify hCaptcha token from the incoming request."""
+    captcha_token = request.headers.get("X-Captcha-Token")
+
+    if not HCAPTCHA_SECRET_KEY:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API Key",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Captcha secret key is not configured.",
         )
-    return api_key_header
+
+    if not captcha_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Captcha token is missing."
+        )
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                HCAPTCHA_VERIFY_URL,
+                data={"secret": HCAPTCHA_SECRET_KEY, "response": captcha_token},
+            )
+            response.raise_for_status()
+            result = response.json()
+            if not result.get("success"):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Captcha verification failed. Please try again.",
+                )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Error during CAPTCHA verification: {str(e)}",
+            )

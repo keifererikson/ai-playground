@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 import { useSettings } from "@/app/context/SettingsContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,15 +19,9 @@ import {
 } from "@/components/ui/tooltip"
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { Spinner } from "@/components/ui/spinner"
-import { LucideLock } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-interface PlaygroundPanelProps {
-  apiKey: string;
-  setAccessCodeError: (error: string | null) => void;
-}
-
-export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelProps) {
+export function PlaygroundPanel({ }) {
   const { settings } = useSettings();
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState("");
@@ -42,8 +37,10 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
 
   const [activeTab, setActiveTab] = useState("text-generation");
 
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const hcaptchaRef = useRef<HCaptcha>(null);
+
   const embeddingsSupported = !!settings?.embedding_model;
-  const isLocked = !apiKey;
 
   useEffect(() => {
     if (activeTab === "embeddings" && !embeddingsSupported) {
@@ -53,7 +50,6 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
 
 
   const handleSubmit = async () => {
-    setAccessCodeError(null);
 
     if (!prompt) {
       const errorMessage = "Prompt cannot be empty.";
@@ -61,10 +57,9 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
       toast.error(errorMessage);
       return;
     }
-    if (!apiKey) {
-      const errorMessage = "Please enter your Access Code in the configuration panel.";
-      setAccessCodeError(errorMessage);
-      toast.error(errorMessage);
+
+    if (!captchaToken) {
+      toast.error("Please complete the hCaptcha verification.");
       return;
     }
 
@@ -73,7 +68,7 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
     setResponse("");
 
     try {
-      const result = await testPrompt(prompt, apiKey);
+      const result = await testPrompt(prompt, captchaToken);
       setResponse(result);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "An unknown error occurred.");
@@ -84,18 +79,15 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
   }
 
   const handleEmbed = async () => {
-    setAccessCodeError(null);
-
     if (!embeddingPrompt) {
       const errorMessage = "Prompt cannot be empty.";
       setEmbeddingPromptError(errorMessage);
       toast.error(errorMessage);
       return;
     }
-    if (!apiKey) {
-      const errorMessage = "Please enter your Access Code in the configuration panel.";
-      setAccessCodeError(errorMessage);
-      toast.error(errorMessage);
+
+    if (!captchaToken) {
+      toast.error("Please complete the hCaptcha verification.");
       return;
     }
 
@@ -104,7 +96,7 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
     setEmbeddingResponse(null);
 
     try {
-      const result = await embedPrompt(embeddingPrompt, apiKey);
+      const result = await embedPrompt(embeddingPrompt, captchaToken);
       setEmbeddingResponse(result);
     } catch (err) {
       setEmbeddingApiError(err instanceof Error ? err.message : "An unknown error occurred.");
@@ -124,16 +116,6 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative">
-
-          {isLocked && (
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-lg">
-              <LucideLock className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-muted-foreground font-semibold">
-                Enter your Access Code to unlock the playground.
-              </p>
-            </div>
-          )}
-
           <Tabs
             defaultValue="text-generation"
             className="w-full"
@@ -177,7 +159,15 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
                   className={cn(promptError && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
-              <div className="flex justify-end mt-4">
+
+              <div className="flex flex-col items-end gap-4 mt-4">
+                <HCaptcha
+                  sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  ref={hcaptchaRef}
+                  theme="dark"
+                />
                 <Button onClick={handleSubmit} disabled={isLoading || !prompt}>
                   {isLoading ? <><Spinner />Submitting...</> : <><LucideSendHorizontal />Submit Prompt</>}
                 </Button>
@@ -202,7 +192,14 @@ export function PlaygroundPanel({ apiKey, setAccessCodeError }: PlaygroundPanelP
                   className={cn(embeddingPromptError && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
-              <div className="flex justify-end mt-4">
+              <div className="flex flex-col items-end gap-4 mt-4">
+                <HCaptcha
+                  sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  ref={hcaptchaRef}
+                  theme="dark"
+                />
                 <Button onClick={handleEmbed} disabled={isEmbeddingLoading || !embeddingPrompt}>
                   {isEmbeddingLoading ? <><Spinner />Generating...</> : <><LucideSendHorizontal />Generate Embedding</>}
                 </Button>

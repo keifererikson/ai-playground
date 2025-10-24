@@ -1,21 +1,10 @@
 "use client";
 
-import { useState } from 'react';
 import { ConfigurationPanel } from '@/components/ConfigurationPanel';
 import { PlaygroundPanel } from '@/components/PlaygroundPanel';
 import { HealthiconsArtificialIntelligence } from '@/components/icons/AiIcon';
 
 export default function Home() {
-  const [apiKey, setApiKey] = useState("");
-  const [accessCodeError, setAccessCodeError] = useState<string | null>(null);
-
-  const handleApiKeyChange = (key: string) => {
-    setApiKey(key);
-    if (key) {
-      setAccessCodeError(null);
-    }
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="mx-auto w-full max-w-4xl">
@@ -31,16 +20,9 @@ export default function Home() {
           </p>
         </div>
 
-        <ConfigurationPanel
-          apiKey={apiKey}
-          setApiKey={handleApiKeyChange}
-          accessCodeError={accessCodeError}
-        />
+        <ConfigurationPanel />
 
-        <PlaygroundPanel
-          apiKey={apiKey}
-          setAccessCodeError={setAccessCodeError}
-        />
+        <PlaygroundPanel />
 
       </div>
     </main>

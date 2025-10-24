@@ -33,12 +33,11 @@ export async function getModelsForProvider(provider: string): Promise<string[]> 
   return result.models;
 }
 
-export async function updateSettings(payload: UpdateSettingsPayload, apiKey: string): Promise<Settings> {
+export async function updateSettings(payload: UpdateSettingsPayload): Promise<Settings> {
   const response = await fetch(`${API_BASE_URL}/api/v1/settings`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
     },
     body: JSON.stringify(payload),
   });
@@ -49,12 +48,12 @@ export async function updateSettings(payload: UpdateSettingsPayload, apiKey: str
   return response.json();
 }
 
-export async function testPrompt(prompt: string, apiKey: string): Promise<string> {
+export async function testPrompt(prompt: string, captchaToken: string): Promise<string> {
   const response = await fetch(`${API_BASE_URL}/api/v1/test`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
+      'X-Captcha-Token': captchaToken,
     },
     body: JSON.stringify({ prompt }),
   });
@@ -66,12 +65,12 @@ export async function testPrompt(prompt: string, apiKey: string): Promise<string
   return result.response;
 }
 
-export async function embedPrompt(text: string, apiKey: string): Promise<number[]> {
+export async function embedPrompt(text: string, captchaToken: string): Promise<number[]> {
   const response = await fetch(`${API_BASE_URL}/api/v1/embed`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
+      'X-Captcha-Token': captchaToken,
     },
     body: JSON.stringify({ text }),
   });

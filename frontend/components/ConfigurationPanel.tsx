@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -21,27 +20,13 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/app/context/SettingsContext";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { LucideSave } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { getModelsForProvider } from "@/app/lib/api";
 import { getProviderMetadata } from "@/app/lib/providers";
 
-
-interface ConfigurationPanelProps {
-  apiKey: string;
-  setApiKey: (key: string) => void;
-  accessCodeError: string | null;
-}
 
 const providerTempLimits: { [key: string]: number } = {
   'openai': 2.0,
@@ -50,7 +35,7 @@ const providerTempLimits: { [key: string]: number } = {
   'default': 1.0,
 }
 
-export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: ConfigurationPanelProps) {
+export function ConfigurationPanel({ }) {
   const { settings, saveSettings, isLoading } = useSettings();
 
   const [localProvider, setLocalProvider] = useState("");
@@ -125,7 +110,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
     }
     setIsSaving(true);
     try {
-      await saveSettings(payload, apiKey);
+      await saveSettings(payload);
       toast.success("Settings saved successfully!");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
@@ -148,35 +133,11 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
       <CardHeader>
         <CardTitle>Configuration</CardTitle>
         <CardDescription>
-          Set your Access Code and adjust the model settings.
+          Adjust your AI provider settings below.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6 max-w-3xl mx-auto">
-          <div className="space-y-2">
-            <Label htmlFor="access-code">Access Code</Label>
-            <TooltipProvider>
-              <Tooltip defaultOpen={!apiKey} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Input
-                    id="access-code"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter your Access Code"
-                    className={cn(
-                      accessCodeError && "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </TooltipTrigger>
-                {!apiKey && (
-                  <TooltipContent>
-                    <p>Please enter your Access Code to begin.</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Separator />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="provider">Provider</Label>
@@ -260,7 +221,7 @@ export function ConfigurationPanel({ apiKey, setApiKey, accessCodeError }: Confi
         </Button>
         <Button
           onClick={handleSave}
-          disabled={!isDirty || isSaving || isModelsLoading || !apiKey}
+          disabled={!isDirty || isSaving || isModelsLoading}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
 
         >
