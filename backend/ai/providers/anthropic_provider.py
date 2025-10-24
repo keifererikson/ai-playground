@@ -1,9 +1,14 @@
+import logging
 from typing import cast
+
 from langchain_anthropic import ChatAnthropic
 from langchain_core.utils import convert_to_secret_str
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
-from .base import LLMProvider
 import anthropic
+
+from .base import LLMProvider
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicProvider(LLMProvider):
@@ -29,8 +34,8 @@ class AnthropicProvider(LLMProvider):
 
     def _update_llm_instance(self):
         """Creates or recreates the internal ChatAnthropic LLM instance."""
-        self.llm = ChatAnthropic(
-            model=self.model,
+        self.llm = ChatAnthropic(  # pyright: ignore
+            model=self.model,  # pyright: ignore
             temperature=self.temperature,
             api_key=convert_to_secret_str(self.api_key),
         )
@@ -61,7 +66,7 @@ class AnthropicProvider(LLMProvider):
                     f"Expected a string response, but got {type(response.content)}"
                 )
         except Exception as e:
-            print(f"Error generating Anthropic text: {e}")
+            logger.warning(f"Error generating Anthropic text: {e}")
             raise
 
     async def generate_embedding(self, text: str) -> list[float]:
@@ -100,7 +105,7 @@ class AnthropicProvider(LLMProvider):
             model_names = [model.id for model in models.data if "claude" in model.id]
             return model_names
         except Exception as e:
-            print(f"Error listing Anthropic models: {e}")
+            logger.warning(f"Error listing Anthropic models: {e}")
             raise
 
     async def set_model(self, model: str):

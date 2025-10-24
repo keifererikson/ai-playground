@@ -1,9 +1,14 @@
+import logging
 from typing import cast
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.utils import convert_to_secret_str
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
-from .base import LLMProvider
 import google.genai as genai
+
+from .base import LLMProvider
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiProvider(LLMProvider):
@@ -52,7 +57,7 @@ class GeminiProvider(LLMProvider):
                     f"Expected a string response, but got {type(response.content)}"
                 )
         except Exception as e:
-            print(f"Error generating Gemini text: {e}")
+            logger.warning(f"Error generating Gemini text: {e}")
             raise
 
     async def generate_embedding(self, text: str) -> list[float]:
@@ -73,7 +78,7 @@ class GeminiProvider(LLMProvider):
                 else:
                     raise ValueError("No embeddings returned from the API.")
         except Exception as e:
-            print(f"Error generating Google embedding: {e}")
+            logger.warning(f"Error generating Google embedding: {e}")
             raise
 
     async def get_embedding_model(self) -> str:
@@ -111,7 +116,7 @@ class GeminiProvider(LLMProvider):
 
             return sorted(filtered_models)
         except Exception as e:
-            print(f"Error listing Google models: {e}")
+            logger.warning(f"Error listing Google models: {e}")
             raise
 
     async def set_model(self, model: str):

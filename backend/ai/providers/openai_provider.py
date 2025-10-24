@@ -1,10 +1,15 @@
+import logging
 from typing import cast
+import re
+
 from langchain_openai import ChatOpenAI
 from langchain_core.utils import convert_to_secret_str
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
-from .base import LLMProvider
 import openai
-import re
+
+from .base import LLMProvider
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(LLMProvider):
@@ -60,7 +65,7 @@ class OpenAIProvider(LLMProvider):
                     f"Expected a string response, but got {type(response.content)}"
                 )
         except Exception as e:
-            print(f"Error generating OpenAI text: {e}")
+            logging.warning(f"Error generating OpenAI text: {e}")
             raise
 
     async def generate_embedding(self, text: str) -> list[float]:
@@ -82,7 +87,7 @@ class OpenAIProvider(LLMProvider):
             )
             return response.data[0].embedding
         except Exception as e:
-            print(f"Error generating OpenAI embedding: {e}")
+            logger.warning(f"Error generating OpenAI embedding: {e}")
             raise
 
     async def get_embedding_model(self) -> str:
@@ -125,7 +130,7 @@ class OpenAIProvider(LLMProvider):
 
             return sorted(filtered_models)
         except Exception as e:
-            print(f"Error listing OpenAI models: {e}")
+            logger.warning(f"Error listing OpenAI models: {e}")
             raise
 
     async def set_model(self, model: str):

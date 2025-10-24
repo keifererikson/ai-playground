@@ -1,10 +1,13 @@
 import os
+import logging
 from typing import Dict, Type
 
 from .providers.base import LLMProvider
 from .providers.openai_provider import OpenAIProvider
 from .providers.anthropic_provider import AnthropicProvider
 from ai.providers.gemini_provider import GeminiProvider
+
+logger = logging.getLogger(__name__)
 
 
 class LLMManager:
@@ -65,17 +68,17 @@ class LLMManager:
             try:
                 await provider.validate_credentials()
                 validated_providers[name] = provider
-                print(f"\t✅ Provider '{name}' validated successfully.")
+                logger.info(f"\t✅ Provider '{name}' validated successfully.")
             except Exception as e:
-                print(f"❌ Provider '{name}' validation failed: {e}")
+                logger.warning(f"❌ Provider '{name}' validation failed: {e}")
 
         self.providers = validated_providers
         if not self.providers:
             raise RuntimeError("No valid LLM providers could be initialized.")
 
         if self.current_provider not in self.providers:
-            print(
+            logger.warning(
                 f"⚠️ Current provider '{self.current_provider}' failed validation. Resetting..."
             )
             self.current_provider = list(self.providers.keys())[0]
-            print(f"✅ Current provider reset to '{self.current_provider}'.")
+            logger.info(f"✅ Current provider reset to '{self.current_provider}'.")

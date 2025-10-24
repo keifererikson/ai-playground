@@ -1,4 +1,7 @@
 import contextlib
+import logging
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -10,31 +13,40 @@ from ai.llm_manager import LLMManager
 from app.database import get_db, engine, Base
 from app import crud, models
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
+)
+
+logger = logging.getLogger(__name__)
+
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Application startup: Creating database tables...")
+    logger.info("Application startup: Creating database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("Database tables created (if they didn't exist).")
+    logger.info("Database tables created (if they didn't exist).")
 
-    print("Initializing and validating LLM providers...")
+    logger.info("Initializing and validating LLM providers...")
     llm_manager = LLMManager()
+
     try:
         await llm_manager.validate_providers()
-        app.state.llm_manager = llm_manager
-        print("LLM Manager initialized.")
     except Exception as e:
-        print(f"CRITICAL: Unable to initialize LLMManager: {e}")
-        raise e
+        logger.warning(f"CRITICAL: Unable to validate providers: {e}")
 
-    print("Loading initial settings from database...")
+    app.state.llm_manager = llm_manager
+    logger.info("LLM Manager initialized.")
+
+    logger.info("Loading initial settings from database...")
     async for db in get_db():
         try:
             db_settings = await crud.get_settings(db)
 
             if not db_settings:
-                print("No settings found. Seeding database with defaults...")
+                logger.info("No settings found. Seeding database with defaults...")
 
                 default_provider_name = list(llm_manager.providers.keys())[0]
                 default_provider = llm_manager.providers[default_provider_name]
@@ -46,18 +58,20 @@ async def lifespan(app: FastAPI):
                 db_settings = await crud.create_default_settings(
                     db=db, provider=default_provider_name, model=default_model
                 )
-                print(
+                logger.info(
                     f"Default settings created: {default_provider_name} / {default_model}"
                 )
 
-            print(f"Applying settings: {db_settings.provider} / {db_settings.model}")
+            logger.info(
+                f"Applying settings: {db_settings.provider} / {db_settings.model}"
+            )
             llm_manager.set_provider(db_settings.provider)
             provider = llm_manager.get_current_provider()
             await provider.set_model(db_settings.model)
             await provider.set_temperature(db_settings.temperature)
 
         except Exception as e:
-            print(f"CRITICAL: Failed to load or create settings: {e}")
+            logger.warning(f"CRITICAL: Failed to load or create settings: {e}")
             raise e
 
         finally:
