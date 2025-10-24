@@ -75,6 +75,8 @@ export function PlaygroundPanel({ }) {
       toast.error("Failed to get response", { description: apiError });
     } finally {
       setIsLoading(false);
+      hcaptchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     }
   }
 
@@ -103,6 +105,8 @@ export function PlaygroundPanel({ }) {
       toast.error("Failed to get embeddings", { description: embeddingApiError });
     } finally {
       setIsEmbeddingLoading(false);
+      hcaptchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     }
   }
 
