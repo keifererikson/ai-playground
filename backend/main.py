@@ -20,9 +20,13 @@ async def lifespan(app: FastAPI):
 
     print("Initializing and validating LLM providers...")
     llm_manager = LLMManager()
-    await llm_manager.validate_providers()
-    app.state.llm_manager = llm_manager
-    print("LLM Manager initialized.")
+    try:
+        await llm_manager.validate_providers()
+        app.state.llm_manager = llm_manager
+        print("LLM Manager initialized.")
+    except Exception as e:
+        print(f"CRITICAL: Unable to initialize LLMManager: {e}")
+        raise e
 
     print("Loading initial settings from database...")
     async for db in get_db():
